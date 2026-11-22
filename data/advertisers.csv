@@ -1,0 +1,9 @@
+advertiser_id,product,category,description,price_inr,bid_inr_per_click
+A,Lenovo IdeaPad Slim 5,laptop,"Laptop with Intel Core i5, 16GB RAM, 512GB SSD, suitable for programming and machine learning coursework",69990,12
+B,ASUS Vivobook 15,laptop,"Performance laptop with Intel Core i7, 16GB RAM, 512GB SSD, good for coding and everyday productivity",74990,15
+C,HP Pavilion 14,laptop,"Compact laptop with AMD Ryzen 5, 16GB RAM, 512GB SSD, suitable for students and software development",67990,10
+D,Acer Aspire 7,laptop,"Laptop with Intel Core i5, 16GB RAM, dedicated graphics, suitable for programming and light machine learning",72990,8
+E,Apple MacBook Air M2,laptop,"Lightweight laptop with Apple M2 chip, 8GB unified memory, 256GB SSD, excellent battery life for development",79990,18
+F,Logitech MX Master 3S,accessory,"Wireless ergonomic productivity mouse with customizable buttons and precise tracking",9995,5
+G,Crucial 16GB DDR4 RAM,computer_component,"16GB DDR4 laptop memory upgrade for compatible laptops",3299,4
+H,WD 1TB NVMe SSD,computer_component,"Fast 1TB NVMe solid state drive for compatible laptop storage upgrades",5999,6
