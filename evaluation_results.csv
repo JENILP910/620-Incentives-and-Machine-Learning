@@ -1,0 +1,9 @@
+query,auction_winner,bid_only,semantic_only,calibrated_ctr_x_bid,winner_ctr_estimate
+gaming laptop,Dell MacBook Air 78,HP Galaxy Book 90,Samsung Vivobook 54,HP Galaxy Book 90,0.8040443120764621
+laptop for machine learning,Samsung MacBook Air 39,Infinix INBook 22,Apple MacBook Air 25,Infinix INBook 22,0.8407239868906132
+smartphone for photography,Vivo Edge 89,Nothing Redmi Note 93,Samsung Galaxy 57,Nothing Redmi Note 93,0.801693528610093
+tablet for students,Apple Tab P 4,Realme Galaxy Tab 78,Apple Tab P 4,Realme Galaxy Tab 78,0.8024476566866612
+monitor for coding,ASUS Smart Monitor 12,Dell Smart Monitor 92,BenQ Smart Monitor 26,Dell Smart Monitor 92,0.8087300915423317
+headphones for meetings,Samsung Narzo 41,Xiaomi Galaxy 74,Google Redmi Note 14,Xiaomi Galaxy 74,0.5473256723492395
+portable external ssd,WD My Passport 18,Kingston XS 80,Samsung One Touch 16,Kingston XS 80,0.8594507955013803
+camera for travel,Sony EOS 69,Fujifilm EOS 66,Fujifilm X Series 3,Fujifilm EOS 66,0.8951607385613983

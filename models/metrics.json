@@ -1,0 +1,12 @@
+{
+  "training_data": "synthetic",
+  "rows": 22693,
+  "train_rows": 14750,
+  "calibration_rows": 3971,
+  "test_rows": 3972,
+  "test_auc": 0.8158570219855179,
+  "test_log_loss": 0.4341018897954788,
+  "test_brier_score": 0.13705745624811533,
+  "mean_test_predicted_ctr": 0.26458629604131134,
+  "observed_test_ctr": 0.2618328298086606
+}

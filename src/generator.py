@@ -1,15 +1,9 @@
-"""Transparent response composer.
-
-This deliberately uses a template so the project works without an LLM API key.
-Replace this module with an LLM call if an approved provider/model is available.
-"""
+"""Transparent, auditable response composer (no external LLM required)."""
 def compose_response(query, winner):
     if winner is None:
-        return "I couldn't find a suitable sponsored recommendation."
-    return (
-        f"For your query, \"{query}\", one sponsored option is "
-        f"{winner['product']} (₹{float(winner['price_inr']):,.0f}). "
-        f"It is marked as a sponsored recommendation. "
-        f"{winner['description']}. Please compare specifications and independent "
-        f"reviews before purchasing."
-    )
+        return "I couldn't find a product matching the explicit constraints in your query. Try relaxing the budget or specifications."
+    return (f'For "{query}", the sponsored recommendation is {winner["product"]} '
+            f'(₹{float(winner["price_inr"]):,.0f}). Its estimated click-through rate '
+            f'is {float(winner.get("ctr_estimate", winner.get("relevance", 0))):.2%} '
+            f'from the demo CTR model. {winner["description"]} '
+            "This is a sponsored recommendation; compare specifications and independent reviews before purchasing.")

@@ -1,40 +1,42 @@
-"""Advertisement retrieval using sentence embeddings, with a TF-IDF fallback."""
+"""Constraint-aware product retrieval followed by calibrated CTR scoring."""
 from pathlib import Path
 import pandas as pd
+from .features import parse_budget, detect_category, explicit_constraints, parse_ad_specs
+from .ctr_model import load_model
 
-DATA_PATH = Path(__file__).resolve().parents[1] / "data" / "advertisers.csv"
+ROOT = Path(__file__).resolve().parents[1]
+DATA_PATH = ROOT / "data" / "advertisers.csv"
 
 class AdRetriever:
-    def __init__(self, data_path=DATA_PATH, model_name="sentence-transformers/all-MiniLM-L6-v2"):
+    def __init__(self, data_path=DATA_PATH, ctr_model=None):
         self.ads = pd.read_csv(data_path).fillna("")
-        self.model = None
-        self.embeddings = None
-        try:
-            from sentence_transformers import SentenceTransformer
-            self.model = SentenceTransformer(model_name)
-            texts = (self.ads["product"] + ". " + self.ads["description"]).tolist()
-            self.embeddings = self.model.encode(texts, normalize_embeddings=True)
-        except Exception as exc:
-            # Offline-friendly fallback. It is lexical retrieval, not semantic embedding retrieval.
-            from sklearn.feature_extraction.text import TfidfVectorizer
-            self.vectorizer = TfidfVectorizer(stop_words="english", ngram_range=(1, 2))
-            texts = (self.ads["product"] + ". " + self.ads["description"]).tolist()
-            self.embeddings = self.vectorizer.fit_transform(texts)
-            self.fallback_reason = str(exc)
+        self.ctr_model = ctr_model or load_model()
 
-    def retrieve(self, query, top_k=5):
-        if self.model is not None:
-            q = self.model.encode([query], normalize_embeddings=True)[0]
-            scores = self.embeddings @ q
-        else:
-            q = self.vectorizer.transform([query])
-            scores = (self.embeddings @ q.T).toarray().ravel()
-            # Normalize lexical scores to [0,1] for a convenient relevance scale.
-            max_score = scores.max() if len(scores) else 0
-            scores = scores / max_score if max_score > 0 else scores
-        result = self.ads.copy()
-        result["relevance"] = scores
-        result = result.sort_values("relevance", ascending=False).head(top_k)
-        # Keep the auction relevance strictly positive, as required by this demo's score rule.
-        result["relevance"] = result["relevance"].clip(lower=0.01, upper=1.0)
-        return result.reset_index(drop=True)
+    def filter_candidates(self, query):
+        rows = self.ads.copy()
+        budget = parse_budget(query)
+        category = detect_category(query)
+        constraints = explicit_constraints(query)
+        if category:
+            rows = rows[rows.category.str.lower() == category]
+        if budget is not None:
+            rows = rows[pd.to_numeric(rows.price_inr, errors="coerce") <= budget]
+        if constraints:
+            for key, required in constraints.items():
+                if rows.empty:
+                    break
+                specs = rows.apply(parse_ad_specs, axis=1, result_type="expand")
+                rows = rows.loc[specs[key].notna() & (specs[key] >= required)]
+        return rows.reset_index(drop=True), {"budget_inr": budget, "category": category, "specifications": constraints}
+
+    def retrieve(self, query, top_k=10):
+        candidates, filters = self.filter_candidates(query)
+        if candidates.empty:
+            return candidates.assign(relevance=[], ctr_estimate=[], semantic_similarity=[]), filters
+        ctr, similarity = self.ctr_model.predict(query, candidates)
+        candidates["semantic_similarity"] = similarity
+        candidates["ctr_estimate"] = ctr
+        # The calibrated CTR is the paper-aligned relevance proxy q_i.
+        candidates["relevance"] = candidates["ctr_estimate"].clip(lower=0.001)
+        candidates = candidates.sort_values("relevance", ascending=False).head(top_k)
+        return candidates.reset_index(drop=True), filters

@@ -1,15 +1,7 @@
-"""Single-slot randomized relevance-weighted ad auction.
+"""Single-slot randomized relevance-weighted auction.
 
-Demo rule used here:
-    score_i = q_i * b_i * exp(epsilon_i)
-where epsilon_i is standard Gumbel noise. The winner is the highest score.
-The critical (threshold) payment is the minimum bid needed to beat the
-highest-scoring rival, holding the sampled noise and relevance fixed:
-    payment = q_l * b_l * exp(epsilon_l) / (q_w * exp(epsilon_w))
-
-This is a pedagogical implementation of the mechanism described in the
-project plan. Verify notation and assumptions against the assigned paper
-before presenting it as a formal reproduction.
+The calibrated CTR estimate is used as q_i (relevance). Do not multiply it by
+semantic similarity again: similarity is already an input to the CTR model.
 """
 import numpy as np
 
@@ -32,23 +24,16 @@ def run_auction(ads, rng=None):
     rows["auction_score"] = scores
     rows["is_winner"] = False
     rows.loc[winner_idx, "is_winner"] = True
-
     if len(rows) == 1:
-        payment = 0.0
-        runner_idx = None
+        payment, runner_idx = 0.0, None
     else:
-        rival_scores = scores.copy()
-        rival_scores[winner_idx] = -np.inf
+        rival_scores = scores.copy(); rival_scores[winner_idx] = -np.inf
         runner_idx = int(np.argmax(rival_scores))
-        # Critical bid for the winner, given the sampled perturbations.
-        payment = (q[runner_idx] * bids[runner_idx] * np.exp(eps[runner_idx])
-                   / (q[winner_idx] * np.exp(eps[winner_idx])))
+        payment = q[runner_idx] * bids[runner_idx] * np.exp(eps[runner_idx]) / (q[winner_idx] * np.exp(eps[winner_idx]))
         payment = float(np.clip(payment, 0.0, bids[winner_idx]))
     rows["payment_inr_per_click"] = 0.0
     rows.loc[winner_idx, "payment_inr_per_click"] = payment
-    return {
-        "winner": rows.loc[winner_idx].to_dict(),
-        "runner_up": None if runner_idx is None else rows.loc[runner_idx].to_dict(),
-        "payment": payment,
-        "results": rows.sort_values("auction_score", ascending=False).reset_index(drop=True),
-    }
+    return {"winner": rows.loc[winner_idx].to_dict(),
+            "runner_up": None if runner_idx is None else rows.loc[runner_idx].to_dict(),
+            "payment": payment,
+            "results": rows.sort_values("auction_score", ascending=False).reset_index(drop=True)}
